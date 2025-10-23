@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>For Anjali 💌</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .glass { backdrop-filter: blur(18px); background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); }
+    .shine { background: radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,0.18), transparent 60%); }
+    .float { animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0px) } 50% { transform: translateY(-8px) } }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
+  <div class="absolute inset-0 shine"></div>
+
+  <main class="relative max-w-xl mx-auto px-6 py-16">
+    <header class="flex items-center justify-between mb-8">
+      <button id="historyBtn" class="text-sm opacity-80 hover:opacity-100 underline">History</button>
+      <div class="text-right">
+        <div class="text-xs opacity-75">Aishwary → Anjali</div>
+        <h1 class="text-2xl font-bold">Daily Love Nudge</h1>
+      </div>
+    </header>
+
+    <section class="glass rounded-2xl p-6 shadow-2xl border border-white/10">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center float">💖</div>
+        <h2 class="text-xl font-semibold">Good day, <span class="text-pink-300">Anjali Tiwari</span>!</h2>
+      </div>
+
+      <p id="dailyLine" class="text-lg leading-relaxed"></p>
+
+      <div class="mt-6 grid gap-3">
+        <textarea id="customMsg" rows="3" placeholder="Add a custom note (optional)…" class="w-full rounded-xl bg-white/10 border border-white/10 p-3 outline-none focus:ring-2 focus:ring-pink-400"></textarea>
+        <div class="flex gap-3">
+          <input id="passcode" type="password" placeholder="Passcode" class="flex-1 rounded-xl bg-white/10 border border-white/10 p-3 outline-none focus:ring-2 focus:ring-pink-400" />
+          <button id="sendBtn" class="px-5 py-3 rounded-xl bg-pink-500 hover:bg-pink-400 active:bg-pink-600 transition font-semibold shadow-lg">Send Nudge ✉️</button>
+        </div>
+        <div id="status" class="text-sm opacity-80"></div>
+      </div>
+    </section>
+
+    <footer class="mt-8 text-center text-xs opacity-70">Made with ❤️ in India</footer>
+  </main>
+
+  <script>
+    function confetti() {
+      const c = document.createElement('canvas');
+      c.width = window.innerWidth; c.height = 200; c.style.position = 'fixed'; c.style.top = '0'; c.style.left = '0'; c.style.pointerEvents = 'none'; c.style.zIndex = '50';
+      document.body.appendChild(c);
+      const ctx = c.getContext('2d');
+      const pieces = Array.from({length: 80}).map(() => ({
+        x: Math.random() * c.width,
+        y: Math.random() * -50,
+        s: Math.random() * 6 + 4,
+        v: Math.random() * 2 + 2
+      }));
+      let t = 0;
+      const tick = () => {
+        ctx.clearRect(0,0,c.width,c.height);
+        pieces.forEach(p => {
+          p.y += p.v; p.x += Math.sin((p.y + t)/20);
+          ctx.globalAlpha = 0.8;
+          ctx.fillRect(p.x, p.y, p.s, p.s);
+        });
+        t += 1; if (t < 200) requestAnimationFrame(tick); else c.remove();
+      };
+      ctx.fillStyle = '#fff'; tick();
+    }
+
+    const LINES = [
+      "You are the softly lit morning of my busiest days.",
+      "Your smile is my daily caffeine—zero crash, all glow.",
+      "Proof that magic is real: you, showing up in my life.",
+      "I checked the forecast: 100% chance of you being adorable.",
+      "Reminder: you are loved, loudly and forever.",
+      "You + me = the only math I actually enjoy.",
+      "Every day you’re the plot twist I’m grateful for.",
+      "If home had a heartbeat, it’d sound like your laugh.",
+      "You make ordinary days misbehave and sparkle.",
+      "I’m practicing gratitude. Step 1: You. Step 2: Repeat.",
+    ];
+
+    async function getISTDateKey() {
+      try {
+        const r = await fetch('/api/time');
+        const data = await r.json();
+        return data.dateKey; // YYYY-MM-DD in Asia/Kolkata
+      } catch {
+        const now = new Date();
+        return now.toISOString().slice(0,10);
+      }
+    }
+
+    async function renderDailyLine() {
+      const dateKey = await getISTDateKey();
+      const idx = Math.abs(hashCode(dateKey)) % LINES.length;
+      const line = LINES[idx];
+      document.getElementById('dailyLine').textContent = line;
+      if (!localStorage.getItem('confetti:'+dateKey)) { confetti(); localStorage.setItem('confetti:'+dateKey, '1'); }
+    }
+
+    function hashCode(str) { let h = 0; for (let i=0; i<str.length; i++) { h = ((h<<5)-h) + str.charCodeAt(i); h|=0; } return h; }
+
+    document.getElementById('historyBtn').addEventListener('click', () => {
+      const keys = Object.keys(localStorage).filter(k=>k.startsWith('nudge:')).sort();
+      if (!keys.length) return alert('No nudges sent yet. Time to make her day!');
+      const lines = keys.map(k => `${k.replace('nudge:','')}: ${localStorage.getItem(k)}`);
+      alert('Your nudge history:\n\n' + lines.join('\n'));
+    });
+
+    document.getElementById('sendBtn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      status.textContent = 'Sending…';
+      const pass = document.getElementById('passcode').value.trim();
+      const msg  = document.getElementById('customMsg').value.trim();
+      try {
+        const res = await fetch('/api/nudge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-passcode': pass },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        status.textContent = 'Sent ✔️';
+        const stamp = new Date().toLocaleString();
+        localStorage.setItem('nudge:'+stamp, msg || '(no custom message)');
+      } catch (e) {
+        status.textContent = 'Error: ' + (e.message || 'could not send');
+      }
+    });
+
+    renderDailyLine();
+  </script>
+</body>
+</html>
